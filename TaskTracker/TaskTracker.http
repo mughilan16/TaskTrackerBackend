@@ -4,5 +4,14 @@ GET {{TaskTracker_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
-GET {{TaskTracker_HostAddress}}/api/task/
+GET {{TaskTracker_HostAddress}}/api/tasks/
 Accept: application/json
+
+###
+POST {{TaskTracker_HostAddress}}}/api/tasks
+Accept: application/json
+Content-Type: application/json
+{
+"id": 0,
+"message": "hello"
+}

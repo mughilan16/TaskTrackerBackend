@@ -3,39 +3,47 @@
 namespace TaskTracker.Controllers
 {
     [ApiController]
-    [Route("api/task")]
+    [Route("api/[controller]")]
     public class TaskController : Controller
     {
-        public IActionResult Index()
+        public record GetResponse(List<Task> Tasks, Task? CurrentTask)
         {
-            return View();
+            public List<Task> Tasks { get; set; } = Tasks;
+            public Task? CurrentTask { get; set; } = CurrentTask;
         }
-        public record GetResponse
+
+        public record PostRequest(string Message, string Tag,int Project)
         {
-            public List<Task> Tasks { get; set; }
-            public Task? CurrentTask { get; set; }
-            public bool IsTaskActive { get; set; }
-            public GetResponse(List<Task> tasks, Task? currentTask, bool isTaskActive)
-            {
-                Tasks = tasks;
-                CurrentTask = currentTask;
-                IsTaskActive = isTaskActive;
-            }
+            public string Message { get; set; } = Message;
+            public string Tag { get; set; } = Tag;
+            public int Project { get; set; } = Project;
         }
-        [HttpGet(Name = "GetTasks")]
+
+        [HttpGet()]
         public GetResponse Get()
         {
-            var db = new TaskDB();
+            var db = new TaskDb();
             var tasks = db.GetTasks();
-            var isTaskActive = false;
-            Task? currentTask = null;
-            if (tasks.Last().StopTime == null)
-            {
-                currentTask = tasks.Last();
-                isTaskActive = true;
-                tasks.RemoveAt(tasks.Count-1);
-            }
-            return new GetResponse(tasks, currentTask, isTaskActive);
+            if (tasks.Count == 0) return new GetResponse([], null);
+            if (tasks.Last().StopTime != null) return new GetResponse(tasks, null);
+            var currentTask = tasks.Last();
+            tasks.RemoveAt(tasks.Count-1);
+            return tasks.Count == 0 ? new GetResponse([], currentTask) : new GetResponse(tasks, currentTask);
+        }
+
+        [HttpPost("create")]
+        public IActionResult Create(PostRequest request)
+        {
+            var db = new TaskDb();
+            var newTask = new Task(0, Message: request.Message, Tag: request.Tag, Date: DateTime.Now.Date, StartTime: DateTime.Now, StopTime:null, Total:0, ProjectId: request.Project);
+            return Ok(db.Create(newTask));
+        }
+
+        [HttpPatch("complete")]
+        public IActionResult Patch()
+        {
+            var db = new TaskDb();
+            return Ok(db.CompleteTask());
         }
    }
 }

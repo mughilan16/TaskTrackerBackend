@@ -53,6 +53,7 @@ namespace TaskTracker
             return newTask;
         }
 
+        
         public List<Task> GetTasks()
         {
             _connection.Open();

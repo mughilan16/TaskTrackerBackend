@@ -39,17 +39,29 @@ namespace TaskTracker
         {
             if (this.IsTaskActive()) { throw new Exception("Already Task Active"); }
             _connection.Open();
-            const string query = "INSERT INTO tasks_test(message, date, start_time, tag, project) VALUES(@message, @date, @start_time, @tag, @project) RETURNING id";
-            var cmd = new NpgsqlCommand(query, _connection);
-            cmd.Parameters.Add(new NpgsqlParameter("@message", SqlDbType.Text) { Value = newTask.Message });
-            cmd.Parameters.Add(new NpgsqlParameter("@date", SqlDbType.DateTime) { Value = newTask.Date});
-            cmd.Parameters.Add(new NpgsqlParameter("@start_time", SqlDbType.DateTime) { Value = newTask.StartTime });
-            cmd.Parameters.Add(new NpgsqlParameter("@tag", SqlDbType.Text) { Value = newTask.Tag});
-            cmd.Parameters.Add(newTask.ProjectId == 0
-                ? new NpgsqlParameter("@project", SqlDbType.Int) { Value = null }
-                : new NpgsqlParameter("@project", SqlDbType.Int) { Value = newTask.ProjectId });
-            var reader = cmd.ExecuteReader();
-            if (reader.Read()) { newTask.Id = (int) reader["id"]; }
+            if (newTask.ProjectId == 0)
+            {
+                const string query = "INSERT INTO tasks_test(message, date, start_time, tag, project) VALUES(@message, @date, @start_time, @tag, @project) RETURNING id";
+                var cmd = new NpgsqlCommand(query, _connection);
+                cmd.Parameters.Add(new NpgsqlParameter("@message", SqlDbType.Text) { Value = newTask.Message });
+                cmd.Parameters.Add(new NpgsqlParameter("@date", SqlDbType.DateTime) { Value = newTask.Date});
+                cmd.Parameters.Add(new NpgsqlParameter("@start_time", SqlDbType.DateTime) { Value = newTask.StartTime });
+                cmd.Parameters.Add(new NpgsqlParameter("@tag", SqlDbType.Text) { Value = newTask.Tag});
+                cmd.Parameters.Add(new NpgsqlParameter("@project", SqlDbType.Int) { Value = newTask.ProjectId });
+                var reader = cmd.ExecuteReader();
+                if (reader.Read()) { newTask.Id = (int) reader["id"]; }
+            }
+            else
+            {
+                const string query = "INSERT INTO tasks_test(message, date, start_time, tag) VALUES(@message, @date, @start_time, @tag) RETURNING id";
+                var cmd = new NpgsqlCommand(query, _connection);
+                cmd.Parameters.Add(new NpgsqlParameter("@message", SqlDbType.Text) { Value = newTask.Message });
+                cmd.Parameters.Add(new NpgsqlParameter("@date", SqlDbType.DateTime) { Value = newTask.Date});
+                cmd.Parameters.Add(new NpgsqlParameter("@start_time", SqlDbType.DateTime) { Value = newTask.StartTime });
+                cmd.Parameters.Add(new NpgsqlParameter("@tag", SqlDbType.Text) { Value = newTask.Tag});
+                var reader = cmd.ExecuteReader();
+                if (reader.Read()) { newTask.Id = (int) reader["id"]; }
+            }
             return newTask;
         }
 
